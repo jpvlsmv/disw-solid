@@ -3,15 +3,15 @@ groups: {}
 comments: []
 routes:
   - id: 2U58nB
-    name: datatype1
+    name: zeek-dns
     final: true
     disabled: false
-    pipeline: datatype1
-    description: Direct data that looks like pattern1 to its pipeline
+    pipeline: solid-zeek-dns
+    description: Parse data that looks like Zeek DNS logs
     clones: []
     enableOutputExpression: false
     outputExpression: null
-    filter: _raw.includes("datatype1")
+    filter: appname=='SOLID-zeek-dns'
     output: default
   - id: default
     name: default

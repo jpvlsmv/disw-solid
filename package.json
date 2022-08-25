@@ -1,7 +1,1 @@
-{
-  "name":"disw-solid",
-  "version":"!!GITVER!!",
-  "author":"Joe Moore (jpvlsmv) - cc",
-  "description":"Template to provide the required elements and best practices of a pack - !!GITDESCRIBE!!",
-  "displayName":"disw-solid"
-}
+{"name":"disw-solid_0.3.2","version":"!!GITVER!!","author":"Joe Moore (jpvlsmv) - cc","description":"Template to provide the required elements and best practices of a pack - !!GITDESCRIBE!!","displayName":"disw-solid"}

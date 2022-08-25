@@ -1,0 +1,146 @@
+output: default
+streamtags: []
+groups: {}
+asyncFuncTimeout: 1000
+functions:
+  - id: comment
+    filter: "true"
+    disabled: null
+    conf:
+      comment: |-
+        Receive Zeek DNS data and process it for Splunk
+
+        Input: syslog message preprocessed
+        Output: 
+  - id: regex_extract
+    filter: "true"
+    disabled: null
+    conf:
+      source: message
+      iterations: 100
+      overwrite: false
+      regex: /(?<msgtime>\S+)\s\{(?<block1>.*?)\}\s(?<block2>\{.*})/
+    description: Message is 3 separate pieces
+  - id: serde
+    filter: "true"
+    disabled: null
+    conf:
+      mode: extract
+      type: json
+      srcField: host
+      dstField: host
+    description: Parse host field
+  - id: serde
+    filter: "true"
+    disabled: null
+    conf:
+      mode: extract
+      type: kvp
+      srcField: block1
+      cleanFields: false
+      dstField: bl1
+    description: Parse block1 as JSON
+  - id: serde
+    filter: "true"
+    disabled: null
+    conf:
+      mode: extract
+      type: json
+      srcField: block2
+      dstField: bl2
+    description: Parse block2 as JSON
+  - id: eval
+    filter: "true"
+    disabled: null
+    conf:
+      add:
+        - name: dvc
+          value: host.name
+        - name: additional_answer_count
+          value: "0"
+        - name: answer
+          value: bl2.answers||''
+        - name: answer_count
+          value: answer.length||0
+        - name: authority_answer_count
+          value: "0"
+        - name: dest
+          value: bl2.id.resp_h
+        - name: dest_port
+          value: bl2.id.resp_p
+        - name: message_type
+          value: answer?"Response":"Query"
+        - name: name
+          value: bl2.uid
+        - name: query
+          value: bl2.query
+        - name: query_count
+          value: "1"
+        - name: query_type
+          value: bl2.qtype_name
+        - name: reply_code
+          value: bl2.rcode_name
+        - name: reply_code_id
+          value: bl2.rcode
+        - name: src
+          value: bl2.id.orig_h
+        - name: src_port
+          value: bl2.id.orig_p
+        - name: transaction_id
+          value: bl2.trans_id
+        - name: transport
+          value: bl2.proto
+        - name: ttl
+          value: bl2.TTLs
+        - name: vendor_product
+          value: "'zeek:dns'"
+        - name: record_type
+          value: bl2.qtype_name
+    description: Rename fields for compliance
+  - id: eval
+    filter: "true"
+    disabled: null
+    conf:
+      add:
+        - name: index
+          value: "'solid'"
+        - name: sourcetype
+          value: "'solid:zeek:dns'"
+      remove:
+        - bl1
+        - bl2
+        - block1
+        - block2
+        - ts
+        - host
+        - procid
+        - severity
+        - severityName
+        - facility
+        - facilityName
+        - message
+    description: Set Splunk metadata
+  - id: serialize
+    filter: "true"
+    disabled: null
+    conf:
+      type: kvp
+      fields:
+        - "!_*"
+        - "!cribl_breaker"
+        - "*"
+      dstField: _raw
+      cleanFields: true
+    description: Assemble into k=v for Splunk
+  - id: eval
+    filter: "true"
+    disabled: null
+    conf:
+      keep:
+        - index
+        - sourcetype
+        - _raw
+        - _time
+      remove:
+        - "*"
+description: Process zeek dns log records
